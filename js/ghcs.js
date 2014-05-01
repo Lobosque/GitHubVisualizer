@@ -49,8 +49,8 @@ var ghcs = {
     },
     settings : {
         access : {
-            client_id : "c45417c5d6249959a91d",
-            client_secret : "4634b3aa7549c3d6306961e819e5ec9b355a6548",
+            client_id : "f0ea257d1dfd194cde3c",
+            client_secret : "84e6a9fc6ba7c0823add0ea0c0207eaffd0201e4",
             ncid : undefined,
             ncs : undefined,
             code : undefined,
