@@ -658,59 +658,10 @@
     </div>
 </div>
 
-<div id="tooltip" class="popup tooltip"></div>
 
 <div id="layers">
     <div id="canvas"></div>
     <div id="svg"></div>
-</div>
-
-<div id="sms" class="popup">
-</div>
-
-<div id="example" class="popup tooltip">
-    <div>
-        <a href="#repo=d3&climit=100&user=mbostock&run" title="Run visualization repo D3js">
-            <img src="https://f.cloud.github.com/assets/134249/1274358/39cb552a-2d96-11e3-9936-c892a2f81bb6.gif" alt="D3js">
-        </a>
-        <h1><a href="https://github.com/mbostock/d3" title="Visit on Github">D3js</a></h1>
-        <span>A JavaScript visualization library for HTML and SVG.</span>
-    </div>
-    <div>
-        <a href="#repo=mc&climit=100&user=MidnightCommander&run" title="Run visualization repo MidnightCommander">
-            <img src="https://raw.github.com/artzub/GitHubCodeSwarm/master/resource/ss_mc.png" alt="MidnightCommander">
-        </a>
-        <h1><a href="https://github.com/MidnightCommander/mc" title="Visit on Github">MidnightCommander</a></h1>
-        <span>Midnight Commander's repository.</span>
-    </div>
-    <div>
-        <a href="#repo=jquery&climit=100&user=jquery&run" title="Run visualization repo jQuery">
-            <img src="https://raw.github.com/artzub/GitHubCodeSwarm/master/resource/ss_jquery.png" alt="jQuery">
-        </a>
-        <h1><a href="https://github.com/jquery/jquery" title="Visit on Github">jQuery</a></h1>
-        <span>jQuery JavaScript Library.</span>
-    </div>
-    <div>
-        <a href="#repo=bootstrap&climit=100&user=twbs&run" title="Run visualization repo Bootstrap">
-            <img src="https://raw.github.com/artzub/GitHubCodeSwarm/master/resource/ss_bootstrap.png" alt="Bootstrap">
-        </a>
-        <h1><a href="https://github.com/twbs/bootstrap" title="Visit on Github">Bootstrap</a></h1>
-        <span>Sleek, intuitive, and powerful front-end framework for faster and easier web development.</span>
-    </div>
-    <div>
-        <a href="#repo=rails&climit=100&user=rails&run" title="Run visualization repo Ruby on Rails">
-            <img src="https://raw.github.com/artzub/GitHubCodeSwarm/master/resource/ss_rails.png" alt="Rails">
-        </a>
-        <h1><a href="https://github.com/rails/rails" title="Visit on Github">Rails</a></h1>
-        <span>Ruby on Rails</span>
-    </div>
-    <div>
-        <a href="#repo=song-of-github&climit=100&user=ajacksified&run" title="Run visualization repo Ruby on Song-of-github">
-            <img src="https://raw.github.com/artzub/GitHubCodeSwarm/master/resource/ss_song-of-github.png" alt="song-of-github">
-        </a>
-        <h1><a href="https://github.com/ajacksified/song-of-github" title="Visit on Github">Song-of-github</a></h1>
-        <span>Let me play you the song of my contributions.</span>
-    </div>
 </div>
 
 <footer>
@@ -725,79 +676,21 @@
     </div>
 </footer>
 
-<script>
-    if (location.search.indexOf('code=') < 0) {
-        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-
-        ga('create', 'UA-28343295-7', 'ghv.artzub.com'/*, {'alwaysSendReferrer': true }*/);
-
-        var ref = getCookie('referrer');
-        console.log(document.referrer);
-        console.log(ref);
-        if (ref && ref.replace(/\s+$/, '').replace(/^\s+/, '').length > 0) {
-            ga('set', 'referrer', ref);
-        }
-        deleteCookie('referrer');
-
-
-        if (document.location.hash.replace(/^#/, "").length < 1) {
-            ga('send', 'pageview');
-        }
-    }
-</script>
-
 <script charset="utf-8" src="http://d3js.org/d3.v3.min.js"></script>
 <script src="js/md5.js"></script>
 <script src="js/jsonp.js"></script>
 <script src="js/ghcs.js"></script>
+<script src="js/data.js"></script>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/csvParser.js"></script>
 <script src="js/main.js"></script>
-<script src="js/github.js"></script>
 <script src="js/vis.js"></script>
 <script src="js/stat.js"></script>
 <script src="js/usercommit.js"></script>
 <script src="js/repo.js"></script>
 <script src="js/langhg.js"></script>
 <script src="js/show.js"></script>
-
-<script>(function(d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0];
-    if (d.getElementById(id)) return;
-    js = d.createElement(s); js.id = id;
-    js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=780984598581744";
-    fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
-
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function (d, w, c) {
-        (w[c] = w[c] || []).push(function() {
-            try {
-                w.yaCounter23779012 = new Ya.Metrika({id:23779012,
-                    clickmap:true,
-                    trackLinks:true,
-                    accurateTrackBounce:true,
-                    trackHash:true});
-            } catch(e) { }
-        });
-
-        var n = d.getElementsByTagName("script")[0],
-                s = d.createElement("script"),
-                f = function () { n.parentNode.insertBefore(s, n); };
-        s.type = "text/javascript";
-        s.async = true;
-        s.src = (d.location.protocol == "https:" ? "https:" : "http:") + "//mc.yandex.ru/metrika/watch.js";
-
-        if (w.opera == "[object Opera]") {
-            d.addEventListener("DOMContentLoaded", f, false);
-        } else { f(); }
-    })(document, window, "yandex_metrika_callbacks");
-</script>
-<noscript><div><img src="//mc.yandex.ru/watch/23779012" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
 
 </body>
 </html>

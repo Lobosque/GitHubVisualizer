@@ -7,116 +7,11 @@
 'use strict';
 
 if(typeof(window.hasOAuth) === "string") {
-    loadSettings();
     ghcs.settings.access.code = window.hasOAuth;
-    saveSetting();
     var code = 'code=' + window.hasOAuth;
     var rg = new RegExp('[\\?&]' + code);
     location.href = location.href.replace(location.search, location.search.replace(rg, ''));
     delete window["hasOAuth"];
-}
-
-var sendEvent = true;
-var sendEventCategory = ["Setting", "Button", "Access", "Log", "Repos"];
-
-var GAEvent = {
-    Setting : {
-        Name : "Setting",
-        Action : {
-            ChangeValue : "ChangeValue"
-        },
-        ChangeValue : function(d, v) {
-            gaEventSend(this.Name, this.Action.ChangeValue, d, v);
-        }
-    },
-    Button : {
-        Name : "Button",
-        RepoListSelect : function(d) {
-            gaEventSend(this.Name, "RepoListSelect", d);
-        },
-        Show : function(d) {
-            gaEventSend(this.Name, "Show", d);
-        },
-        Analyse : function(d) {
-            gaEventSend(this.Name, "Analyse", d);
-        }
-    },
-    Show : {
-        Name : "Show",
-        Action : {
-            Stop : "Stop",
-            Run : "Run",
-            Pause : "Pause",
-            Restart : "Restart"
-        },
-        Stop : function(d) {
-            gaEventSend(this.Name, this.Action.Stop, d);
-        },
-        Run : function(d) {
-            gaEventSend(this.Name, this.Action.Run, d);
-        },
-        Pause : function(d) {
-            gaEventSend(this.Name, this.Action.Pause, d);
-        },
-        Restart : function(d) {
-            gaEventSend(this.Name, this.Action.Restart, d);
-        }
-    },
-    Access : {
-        Name : "Access",
-        Action : {
-            SignIn : "SignIn",
-            SignOut : "SignOut"
-        },
-        SignIn: function(d) {
-            gaEventSend(this.Name, this.Action.SignIn, d);
-        },
-        SignOut: function(d) {
-            gaEventSend(this.Name, this.Action.SignOut, d);
-        }
-    },
-    Log : {
-        Name : "Log",
-        Action : {
-            Log : "Log"
-        },
-        Log : function(d) {
-            gaEventSend(this.Name, this.Action.Log, d);
-        }
-    },
-    Behavior : {
-        Name : "Behavior",
-        Action : {
-
-        }
-    },
-    Repos : {
-        Name : "Repos",
-        Action : {
-            Analyse : "Analyse"
-        },
-        Analyse : function(d) {
-            gaEventSend(this.Name, this.Action.Analyse, d);
-        },
-        Select: function(d) {
-            gaEventSend(this.Name, "Select", d);
-        },
-        Deselect: function(d) {
-            gaEventSend(this.Name, "Deselect", d);
-        }
-    }
-};
-
-function gaEventSend(category, action, label, value) {
-    if (!ga || !sendEvent || sendEventCategory.indexOf(category) < 0)
-        return;
-
-    ga("send", 'event', {
-        'eventCategory': category,
-        'eventAction': action,
-        'eventLabel': label
-        , 'eventValue': value
-    });
 }
 
 var timeFormat = (function() {
@@ -153,30 +48,13 @@ function updateStatus(pos, label) {
         .setLabel(label || "Completed " + pos + " of " + ghcs.states.max + " commits ...");
 }
 
-d3.select(window).on("hashchange", applyParams);
-
-function parseParams(hash) {
-    var params = {};
-    hash.replace(/^#/, "").split("&").forEach(function(item) {
-        var values = item.split("=");
-        var key = values[0].toLowerCase();
-        params[key] = values.length > 1 ? values[1] : "";
-    });
-
-    ghcs.params = params;
-
-    ghcs.params.climit = params.climit || ghcs.limits.commits;
-}
-
 function rewriteHash() {
     var step,
         hash = [];
     if (this == showBtn.node() && ghcs.params) {
-        GAEvent.Button.Show(ghcs.params.user || "(not set)");
         step = 0;
     }
     else if (this == runBtn.node() && ghcs.params) {
-        GAEvent.Button.Analyse((ghcs.login || "(not set)") + "/" + (ghcs.repo ? ghcs.repo.name : "(not set)"));
         step = 1;
     }
 
@@ -191,110 +69,6 @@ function rewriteHash() {
             break;
     }
     document.location.hash = "#" + hash.join("&");
-}
-
-function applyParams() {
-    d3.event && d3.event.preventDefault();
-
-    var hash = document.location.hash.substr(1);
-
-    if (hash.indexOf("#") > -1)
-        document.location.hash = "#" + hash.replace(/#/g, "&");
-
-    parseParams(hash);
-
-    if(ghcs.params.user == "artzub" &&
-       ghcs.params.repo && ghcs.params.repo.toLowerCase() == "githubcodeswarm") {
-        document.location.hash = "#" + hash.replace("repo=" + ghcs.params.repo, "repo=GitHubVisualizer");
-        return;
-    }
-
-    if (ghcs.params.hasOwnProperty("run")) {
-        ghcs.localStorage.set("run", ghcs.params.run);
-        document.location.hash = "#" + hash.replace(/&?run=?/, "");
-        return;
-    }
-
-    if (ghcs.params.hasOwnProperty("wiki-repo")) {
-        alert([
-            "Dear friend! I glad to welcome you on Github Visualizer!",
-            "You've followed a link that contains the incorrect search query 'wiki-repo='.",
-            "Let me (artzub@gmail.com) know where you found this link, please.",
-            "Thank you for your understanding!"
-        ].join('\n'));
-        document.location.hash = "#" + hash.replace(/wiki-repo=/, "repo=");
-        return;
-    }
-
-    if (ga) {
-        if (ga.currentPage != hash) {
-            ga.currentPage = hash;
-            ga('set', 'page', hash ? "?" + hash : hash);
-            ga('send', 'pageview');
-        }
-    }
-
-    stackLoad = stackLoad-- < 1 ? 0 : stackLoad;
-
-    d3.select("#misc").classed("open", !ghcs.params.user);
-    d3.select("#example").classed("open", !ghcs.params.user);
-
-    ghcs.login && (ghcs.login = ghcs.login.toLowerCase());
-    ghcs.params.user && (ghcs.params.user = ghcs.params.user.toLowerCase());
-
-    if (ghcs.rot != ghcs.params.rot || ghcs.login != ghcs.params.user) {
-        d3.select("#about").classed("open", false);
-
-        ghcs.rot = ghcs.params.rot;
-        userTxt.property("value", ghcs.params.user);
-
-        ghcs.user = null;
-
-        if (ghcs.params.repo)
-            stackLoad++;
-
-        chUser();
-    }
-    else if (ghcs.user && ghcs.user.repos) {
-        var r;
-
-        ghcs.limits.commits = ghcs.params.climit || ghcs.limits.commits;
-        d3.select("#txt-lc").property("value", ghcs.limits.commits);
-
-        if (!ghcs.repo
-            || ghcs.repo.name != ghcs.params.repo
-            || !ghcs.repo.commits
-            || (!ghcs.repo.loadedAll && ghcs.repo.commitsCount < ghcs.limits.commits)) {
-            if (ghcs.repo && ghcs.repo.name == ghcs.params.repo)
-                r = ghcs.repo;
-            else
-                r = ghcs.user.repos.reduce(function(a, b) {
-                        if (!a && b.nodeValue.name == ghcs.params.repo)
-                            a = b;
-                        return a;
-                    }, null)
-                ;
-        }
-
-        if (r) {
-            if (ghcs.repo != r) {
-                vis.meRepo(r);
-                vis.clRepo(r);
-                vis.mlRepo(r);
-            }
-        }
-
-        analyseCommits();
-    }
-}
-
-function nextStepApplyParams() {
-    if (stackLoad)
-        applyParams();
-    else if (ghcs.localStorage.get("run") != undefined) {
-        ghcs.localStorage.removeItem("run");
-        runShow();
-    }
 }
 
 function chRadio(d) {
@@ -312,36 +86,30 @@ function chCheckbox(d) {
         case "cb-dlsr":
             ln = d.datum();
             if (vis.layers[ln]) {
-                gaEventSend("Behavior", "Show/Hide", ln, d.property("checked"));
                 ((d.property("checked") && vis.layers[ln].show()) || vis.layers[ln].hide());
             }
             break;
         case "cb-dllh":
             if (vis.layers.repo
                 && vis.layers.repo.langHg) {
-                gaEventSend("Behavior", "Show/Hide", "cb-dllh", d.property("checked"));
                 vis.layers.repo.langHg.style("display", d.property("checked") ? null : "none");
             }
             break;
         case "cb-dlucdg":
             if (vis.layers.stat
                 && vis.layers.stat.ucDg) {
-                gaEventSend("Behavior", "Show/Hide", "cb-dlucdg", d.property("checked"));
                 vis.layers.stat.ucDg.style("display", d.property("checked") ? null : "none");
             }
             break;
         case "cb-dlvml":
-            gaEventSend("Behavior", "Show/Hide", "cb-dlvml", d.property("checked"));
             d.property("checked") ? cs.show() : cs.hide();
             break;
         default :
             if ((ln = d.datum()) && ln.ns) {
                 ln.ns[ln.key] = d.property("checked");
-                GAEvent.Setting.ChangeValue(ln.key, ln.ns[ln.key]);
             }
             break;
     }
-    saveSetting();
 }
 
 function chValue(d) {
@@ -349,9 +117,7 @@ function chValue(d) {
     d = d3.select(this);
     if ((ln = d.datum()) && ln.ns){
         ln.ns[ln.key] = this.type == "number" ? +d.property("value") : d.property("value");
-        GAEvent.Setting.ChangeValue(ln.key, this.type == "number" ? ln.ns[ln.key] : 0);
     }
-    saveSetting();
 }
 
 function checkCompleted() {
@@ -381,14 +147,7 @@ function getUserRepo() {
 }
 
 function runShow() {
-    if (ghcs.repo && ghcs.repo.commits) {
-        GAEvent.Show.Run(getUserRepo());
-        visBtnRestart.hide();
-        visBtn.hide();
-        visBtnPause.show();
-        visBtnStop.show();
-        vis.runShow(ghcs.repo, null, visBtnStop.on('click'));
-    }
+  vis.runShow(lucasData);
 }
 
 function redrawRepos() {
@@ -660,15 +419,9 @@ function repoItemOut(d) {
 }
 
 function repoItemClick(d) {
-    if (d) {
-        try {
-            GAEvent.Button.RepoListSelect(ghcs.login + "/" + d.nodeValue.name);
-        }
-        catch (e) {
-            console.log("error", e);
-        }
-        vis.clRepo(d);
-    }
+  if (d) {
+    vis.clRepo(d);
+  }
 }
 
 function getAccessToken(code) {
@@ -682,8 +435,6 @@ function getAccessToken(code) {
                 if (err) {
                     d3.select("#userOAuth").classed("have", true);
                     ghcs.settings.access.token = data;
-                    saveSetting();
-                    loadSettings();
                 }
             }
 
@@ -699,8 +450,6 @@ function getAccessToken(code) {
 }
 
 function init() {
-    loadSettings();
-
     if (ghcs.settings.access.code) {
         getAccessToken(code);
         delete ghcs.settings.access.code;
@@ -779,7 +528,6 @@ function init() {
                 }
                 msg = "other: " + msg;
             }
-            GAEvent.Log.Log(msg);
             logCont.append("li").style("max-width", w/2 + "px").text(msg);
             sms.append("div")
                 .append("span")
@@ -902,46 +650,6 @@ function init() {
         item.disable = function () {
             item.attr("disabled", "disabled");
             return item;
-        };
-    });
-
-    visBtnRestart = d3.select("#visBtnRestart").on('click', function() {
-        GAEvent.Show.Restart(getUserRepo());
-        vis.stopShow();
-        visBtnRestart.hide();
-        visBtn.hide();
-        visBtnPause.show();
-        visBtnStop.show();
-        runShow();
-    });
-
-    function pauseShow() {
-        GAEvent.Show.Pause(getUserRepo());
-        vis.pauseShow();
-        visBtnRestart.hide();
-        visBtnPause.hide();
-        visBtn.show();
-    }
-
-    visBtnPause = d3.select("#visBtnPause").on('click', pauseShow);
-    visBtnStop = d3.select("#visBtnStop").on('click', function() {
-        GAEvent.Show.Stop(getUserRepo());
-        vis.stopShow();
-        visBtnRestart.show();
-        visBtnPause.hide();
-        visBtn.hide();
-        visBtnStop.hide();
-    });
-
-    [visBtn, visBtnRestart,
-        visBtnPause, visBtnStop].forEach(function(d) {
-        d.hide = function() {
-            d.style("display", "none");
-            return d;
-        };
-        d.show = function() {
-            d.style("display", null);
-            return d;
         };
     });
 
@@ -1113,7 +821,6 @@ function init() {
 
     d3.select("#getOAuth").on('click', function() {
         if(!ghcs.settings.access.token) {
-            GAEvent.Access.SignIn('Github');
             if (window.oauthWindow) {
                 window.oauthWindow.focus();
             }
@@ -1131,12 +838,9 @@ function init() {
             }
         }
         else {
-            GAEvent.Access.SignOut('Github');
             d3.select("#userOAuth").classed("have", false);
             delete ghcs.settings.access.token;
-            saveSetting();
         }
     });
 
-    applyParams();
 }

@@ -159,13 +159,3 @@ var ghcs = {
         canvas.height = 0;
     }
 })(ghcs);
-
-function loadSettings() {
-    if (ghcs.localStorage.get("ghcs.settings")) {
-        ghcs.settings = ghcs.localStorage.get("ghcs.settings");
-    }
-}
-
-function saveSetting() {
-    ghcs.localStorage.set("ghcs.settings", ghcs.settings);
-}

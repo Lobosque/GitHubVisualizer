@@ -109,7 +109,6 @@
             return;
 
         if (vis.forceRep.selected && vis.forceRep.selected == d) {
-            GAEvent.Repos.Deselect(ghcs.login + "/" + d.nodeValue.name);
             vis.forceRep.selected = null;
             d && (d.fixed = 4);
         }
@@ -122,7 +121,6 @@
                 && vis.layers.repo.langHg.style("pointer-events", "none");
             }
 
-            GAEvent.Repos.Select(ghcs.login + "/" + d.nodeValue.name);
             vis.forceRep.selected = d;
             d && (d.fixed = true);
         }

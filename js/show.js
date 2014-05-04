@@ -24,7 +24,7 @@
 
         links,
 
-        lCom, lLeg, lHis,
+        lLeg, lHis,
 
         canvas, ctx,
         bufCanvas, bufCtx,
@@ -70,7 +70,6 @@
         if (stop)
             return;
 
-        lCom.showCommitMessage(d.message);
         appendExtLegend(d.sha);
 
         var l = d.nodes.length,
@@ -106,8 +105,9 @@
 
             n.author = a;
 
-            n.visible = !!n.statuses[d.sha].status;
-            fn = n.nodeValue.name.toLowerCase();
+            //n.visible = !!n.statuses[d.sha].status;
+            n.visible = true;
+            fn = n.nodeValue.amount.toLowerCase();
 
             n.flash = 100;
             n.opacity = 100;
@@ -126,19 +126,6 @@
                 n.opacity *= .5;
             }
 
-            /*data.push(n);
-
-            if (d.cuserNode) {
-                links.push({
-                    source : n,
-                    target : d.cuserNode
-                });
-            }
-
-            links.push({
-                source : n,
-                target : d.userNode
-            });*/
         }
 
         updateLegend(/*d.sha*/);
@@ -245,7 +232,7 @@
     }
 
     function node(d, type) {
-        var c = type == typeNode.file ? d.name : userColor(d.email),
+        var c = type == typeNode.file ? d.name : userColor(d.name),
             ext, x, y,
             w2 = w/2,
             w5 = w/5,
@@ -272,6 +259,7 @@
         y = h * Math.random();
 
         if (type == typeNode.author) {
+	    d.avatar = $('<img></img>').attr('src', d.avatar_url).get(0);
             if (randomTrue()) {
                 x = x > w5 && x < w2
                     ? x / 5
@@ -293,7 +281,7 @@
         return {
             x : x,
             y : y,
-            id : type + (type == typeNode.file ? d.name : d.email),
+            id : type != typeNode.file? d.name : d.id,
             size : type != typeNode.file ? sizeUser : 2,
             weight : type != typeNode.file ? sizeUser : 2,
             fixed : true,
@@ -304,42 +292,42 @@
             d3color : c,
             flashColor: type == typeNode.author ? c : c.brighter().brighter(),
             ext : ext,
-            author : type == typeNode.author ? d.email : null,
+            author : type == typeNode.author ? d.name : null,
             img : type == typeNode.author ? d.avatar : null,
             nodeValue : d
         }
     }
 
+    //get the node of the author, if it is not in the author map yet,
+    //then it is created	
     function getAuthor(d) {
-        if (!d || !d.author)
-            return null;
-
-        var n = authorHash.get(d.author.email);
+        var n = authorHash.get(d.author.name);
 
         if (!n) {
             n = node(d.author, typeNode.author);
-            authorHash.set(d.author.email, n);
+            authorHash.set(d.author.name, n);
         }
         return n;
     }
 
+    //get the node of the file, if it is not in the files map yet,
+    //then it is created.
     function getFile(d) {
-        if (!d || !d.name)
-            return null;
 
-        var n = filesHash.get(d.name);
+	var n = filesHash.get(d.id);
 
-        if (!n) {
-            n = node(d, typeNode.file);
-            n.links = 1;
-            filesHash.set(d.name, n);
-        }
-        return n;
+	if (!n) {
+	    n = node(d.sale, typeNode.file);
+	    n.links = 1;
+	    filesHash.set(d.id, n);
+	}
+	return n;
     }
 
     function initNodes(data) {
         var ns = [],
             i, j, n, d, df;
+
         authorHash = d3.map({});
         filesHash = d3.map({});
         extHash = d3.map({});
@@ -354,45 +342,22 @@
 
                 d.nodes = [];
 
-
+		//create a new node for the author, if it is not there yet.
                 n = getAuthor(d);
                 d.userNode = n;
+		//insert in the mixed node list if it is not there yet.
                 !n.inserted && (n.inserted = ns.push(n));
 
-                if (d.author.login != d.committer.login) {
-                    n = getAuthor(d);
-                    d.cuserNode = n;
+		//for each file
+		n = getFile(d); //get/create it
+		d.nodes.push(n); //add this to our nodes
+		n.size = 2; //
+		n.statuses = n.statuses || {}; //
+		n.statuses[d.sha] = df;
+		n.ext.currents[d.sha] = (n.ext.currents[d.sha] || 0);
+		n.ext.currents[d.sha]++;
+		!n.inserted && (n.inserted = ns.push(n));
 
-                    !n.inserted && (n.inserted = ns.push(n));
-
-                    /*links.push({
-                        source : d.userNode,
-                        target : d.cuserNode
-                    })*/
-                }
-
-                if (!d.files) continue;
-
-                j = d.files.length;
-                while(--j > -1) {
-                    df = d.files[j];
-                    if (!df) continue;
-
-                    n = getFile(df);
-                    d.nodes.push(n);
-                    n.size = 2;
-                    n.statuses = n.statuses || {};
-                    n.statuses[d.sha] = df;
-                    n.ext.currents[d.sha] = (n.ext.currents[d.sha] || 0);
-                    n.ext.currents[d.sha]++;
-                    !n.inserted && (n.inserted = ns.push(n));
-                }
-
-                j = extHash.values().reduce((function(sha) { return function(a, b) {
-                    return (a || 0) + (b.currents[sha] || 0);
-                }})(d.sha), null);
-
-                extMax = j > extMax ? j : extMax;
             }
         }
         return ns;
@@ -755,7 +720,7 @@
                     bufCtx.fillText(setting.labelPattern
                         .replace("%l", d.nodeValue.login)
                         .replace("%n", d.nodeValue.name != "unknown" ? d.nodeValue.name : d.nodeValue.login)
-                        .replace("%e", d.nodeValue.email), x, y + nr(d) * 1.5);
+                        .replace("%e", d.nodeValue.name), x, y + nr(d) * 1.5);
                 }
             }
         }
@@ -1081,114 +1046,6 @@
         return path && path.length && (i = path.lastIndexOf("/") + 1) > 0 ? path.substr(0, i) : "";
     }
 
-    function showToolTip(d) {
-        var res;
-        if (!d) {
-            toolTip.hide();
-            return;
-        }
-        if (toolTip.style("display") == "none") {
-            toolTip.selectAll("*").remove();
-
-            if (d.type == typeNode.author) {
-                toolTip.append("div").attr("class", "row userInfo open").call(function(div) {
-                    div = div.append("div").attr("class", "statInfo");
-
-                    div.node().appendChild(d.nodeValue.avatar);
-                    div.append("ul").call(function(ul) {
-                        (d.author.name || d.nodeValue.login) && ul.append("li").call(function(li) {
-                            li.append("h1")
-                                .text((d.nodeValue.name || d.nodeValue.login))
-                            ;
-                            li.append("hr");
-                        });
-                        ul.append("li").call(function(li) {
-                            li.text("email:");
-                            li.append("strong")
-                                .text(d.nodeValue.email)
-                        });
-                        ul.append("li").call(function(li) {
-                            li.text("login: ");
-                            li.append("strong")
-                                .text(d.nodeValue.login);
-                        });
-                    });
-                });
-            }
-            else {
-                toolTip.append("div").attr("class", "row userInfo open").call(function(div) {
-                    div = div.append("div").attr("class", "statInfo");
-
-                    div.append("ul").call(function(ul) {
-                        ul.append("li").call(function(li) {
-                            li.append("h1")
-                                .text(getName(d.nodeValue.name))
-                            ;
-                            li.append("hr");
-                        });
-                        ul.append("li").call(function(li) {
-                            li.text("extension:");
-                            li.append("strong")
-                                .style("color", d.d3color)
-                                .text(d.ext.key)
-                        });
-                        ul.append("li").call(function(li) {
-                            li.text("path:");
-                            li.append("strong")
-                                .text(getPath(d.nodeValue.name));
-                            li.append("hr");
-                        });
-
-                        ul.append("li").call(function(li) {
-                            li.text("degree of change: ");
-                            li.append("strong")
-                                .text(d3.values(d.statuses).length);
-                        });
-                        ul.append("li")
-                            .call(function(li) {
-                                var key,
-                                    stat = d3.values(d.statuses).reduce(function(a, b) {
-                                        for(key in b) {
-                                            if (key != "status" && key != "name"
-                                                && b.hasOwnProperty(key)) {
-                                                a[key] = (a[key] || 0);
-                                                a[key] += b[key];
-                                            }
-                                        }
-                                        return a;
-                                    }, {});
-                                li = li.append("ul")
-                                    .attr("class", "setting");
-                                li = li.append("li").attr("class", "field");
-                                li.append("h1")
-                                    .text("Changed lines (all time):");
-                                var statSymbol = {changes : "", additions : " + ", deletions : " - "};
-                                for(key in stat) {
-                                    if (stat.hasOwnProperty(key))
-                                        li.append("ul")
-                                            .attr("class", "group")
-                                            .append("li")
-                                            .attr("class", "field")
-                                            .append("span")
-                                            .text(key + ": ")
-                                            .append("strong")
-                                            .style("color", d3.rgb(colors[key]).darker(.2))
-                                            .text(statSymbol[key] + textFormat(stat[key]));
-                                }
-                            });
-                    });
-                });
-            }
-
-            toolTip.show();
-        }
-    }
-
-    function moveToolTip(d, event) {
-        if (d)
-            vis.mtt(d);
-    }
-
     function movem(d) {
         var item = arguments.length > 1 && arguments[1] instanceof HTMLCanvasElement ? arguments[1] : this;
         d = null;
@@ -1210,8 +1067,6 @@
             d.fixed |= 4;
             d3.select("body").style("cursor", "pointer");
         }
-        showToolTip(d, d3.event);
-        moveToolTip(d, d3.event);
         updateLegend();
     }
 
@@ -1224,10 +1079,8 @@
 
         dofinished = onfinished;
 
-        _data = data && data.commits ? data.commits.values().sort(vis.sC) : null;
-
-        if (!_data || !_data.length)
-            return;
+        //_data = data && data.commits ? data.commits.values().sort(vis.sC) : null;
+	_data = data.sales;
 
         setting = ghcs.settings.cs;
 
@@ -1311,49 +1164,6 @@
         lHis && lHis.remove();
         lHis = null;
 
-        lCom && lCom.remove();
-        lCom = layer.append("g")
-            .attr("width", 10)
-            .attr("height", 14)
-            .attr("transform", "translate(" + [w/2, h - 18] + ")")
-            ;
-        lCom.visible = !setting.showCommitMessage;
-
-        lCom.selectAll("text").remove();
-        lCom.showCommitMessage = lCom.showCommitMessage || function(text) {
-            if (setting.showCommitMessage && !lCom.visible) {
-                lCom.visible = true;
-                lCom.style("display", null);
-            }
-            else if (!setting.showCommitMessage && lCom.visible) {
-                lCom.visible = false;
-                lCom.style("display", "none");
-            }
-
-            lCom.append("text")
-                .attr("text-anchor", "middle")
-                .attr("class", "com-mess")
-                .attr("transform", "translate("+ [0, -lCom.node().childElementCount * 14] +")")
-                .text(text.split("\n")[0].substr(0, 100))
-                .transition()
-                .delay(500)
-                .duration(2000)
-                .style("fill-opacity", 1)
-                .duration(200)
-                .style("font-size", "11.2pt")
-                .transition()
-                .duration(1500)
-                .style("fill-opacity", .3)
-                .style("font-size", "11pt")
-                .each("end", function() {
-                    lCom.selectAll("text").each(function(d, i) {
-                        d3.select(this)
-                            .attr("transform", "translate("+ [0, -i * 14] +")");
-                    });
-                })
-                .remove();
-        };
-
         psBar.show();
         ghcs.states.cur = 0;
         ghcs.states.max = dateRange[1] - dateRange[0];
@@ -1361,6 +1171,7 @@
 
         links = [];
         nodes = initNodes(_data);
+	console.log(filesHash);
 
         defImg = new Image();
         defImg.src = "resource/default.png";
