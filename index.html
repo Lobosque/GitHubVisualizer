@@ -28,13 +28,18 @@
 </footer>
 
 <script charset="utf-8" src="http://d3js.org/d3.v3.min.js"></script>
-<script src="js/ghcs.js"></script>
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script src="js/ghcs.js"></script>
 <script src="js/csv.js"></script>
 <script src="js/csvParser.js"></script>
 <script src="js/main.js"></script>
 <script src="js/vis.js"></script>
 <script src="js/show.js"></script>
-
+<script>
+$(window).load(function() {
+  var data = parseStuff();
+  runShow(data);
+});
+</script>
 </body>
 </html>

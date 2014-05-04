@@ -118,6 +118,7 @@ var csvParser = CSVToArray(csvData);
 var sales = [];
 var dates = [];
 
+var parseStuff = function() {
 for(var i = 0; i < csvParser.length; i++) {
   var obj = {
     id: parseInt(csvParser[i][0]),
@@ -143,8 +144,8 @@ for(var i = 0; i < csvParser.length; i++) {
   });
 }
 
-var lucasData = {
+ return {
   sales: sales,
   dates: dates
 };
-console.log(lucasData);
+}

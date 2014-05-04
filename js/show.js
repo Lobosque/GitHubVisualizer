@@ -1084,9 +1084,6 @@
 
         setting = ghcs.settings.cs;
 
-        vis.layers.repo && cbDlr.uncheck();
-        vis.layers.stat && cbDlsr.uncheck();
-
         extColor = d3.scale.category20();
         userColor = d3.scale.category20b();
 
