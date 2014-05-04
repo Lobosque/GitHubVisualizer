@@ -35,8 +35,7 @@ var log;
 var cs, svg_cs, svg,
     margin = {top: 20, right: 20, bottom: 20, left: 20},
     w, h, stackLoad = 0,
-    psBar, runBtn, ldrTop, toolTip, showBtn,
-    visBtn, visBtnRestart, visBtnStop, visBtnPause,
+    psBar, toolTip,
     repoList,
     userTxt, curRep, divStat, stepsBar,
     cbDlr, cbDlsr, cbDlvml,
@@ -46,78 +45,6 @@ function updateStatus(pos, label) {
     pos = pos > ghcs.states.max ? ghcs.states.max : pos;
     psBar.setPos((pos * 100 / (ghcs.states.max || 1)) + "%")
         .setLabel(label || "Completed " + pos + " of " + ghcs.states.max + " commits ...");
-}
-
-function rewriteHash() {
-    var step,
-        hash = [];
-    if (this == showBtn.node() && ghcs.params) {
-        step = 0;
-    }
-    else if (this == runBtn.node() && ghcs.params) {
-        step = 1;
-    }
-
-    switch (step) {
-        case 1:
-            ghcs.params.repo = ghcs.repo ? ghcs.repo.name : null;
-            ghcs.params.repo && hash.push("repo=" + ghcs.params.repo);
-            ghcs.params.climit > 0 && hash.push("climit=" + ghcs.params.climit);
-        case 0:
-            ghcs.params.user && hash.push("user=" + ghcs.params.user);
-            ghcs.params.rot && hash.push("rot=" + ghcs.params.rot);
-            break;
-    }
-    document.location.hash = "#" + hash.join("&");
-}
-
-function chRadio(d) {
-    switch(this.name) {
-        case "participation" : {
-        }
-    }
-}
-
-function chCheckbox(d) {
-    var ln;
-    d = d3.select(this);
-    switch(d.attr("id")) {
-        case "cb-dlr":
-        case "cb-dlsr":
-            ln = d.datum();
-            if (vis.layers[ln]) {
-                ((d.property("checked") && vis.layers[ln].show()) || vis.layers[ln].hide());
-            }
-            break;
-        case "cb-dllh":
-            if (vis.layers.repo
-                && vis.layers.repo.langHg) {
-                vis.layers.repo.langHg.style("display", d.property("checked") ? null : "none");
-            }
-            break;
-        case "cb-dlucdg":
-            if (vis.layers.stat
-                && vis.layers.stat.ucDg) {
-                vis.layers.stat.ucDg.style("display", d.property("checked") ? null : "none");
-            }
-            break;
-        case "cb-dlvml":
-            d.property("checked") ? cs.show() : cs.hide();
-            break;
-        default :
-            if ((ln = d.datum()) && ln.ns) {
-                ln.ns[ln.key] = d.property("checked");
-            }
-            break;
-    }
-}
-
-function chValue(d) {
-    var ln;
-    d = d3.select(this);
-    if ((ln = d.datum()) && ln.ns){
-        ln.ns[ln.key] = this.type == "number" ? +d.property("value") : d.property("value");
-    }
 }
 
 function checkCompleted() {
@@ -469,11 +396,6 @@ function init() {
     d3.select(window).on("blur", function() {
         if (window.hasOwnProperty("needPlayShow"))
             return;
-
-        window.needPlayShow = vis.showIsRun() && !vis.showIsPaused();
-//        log("blur window. need play show :" + window.needPlayShow);
-        if (window.needPlayShow)
-            pauseShow();
     });
 
     var body = d3.select(document.body);
@@ -545,7 +467,6 @@ function init() {
                 .remove()
             ;
             if(msg.indexOf('API Rate Limit Exceeded') >= 0) {
-                ldrTop.show();
                 criticalError.show();
             }
         }
@@ -588,9 +509,6 @@ function init() {
         return obj;
     });
 
-    d3.selectAll("input[type=checkbox]").on("change", chCheckbox);
-    d3.selectAll("input[type=number], input[type=text]").on("change", chValue);
-
     repoList = d3.select("#repo-list");
 
     psBar = d3.select("#progressBar");
@@ -626,69 +544,13 @@ function init() {
         return stepsBar;
     };
 
-    runBtn = d3.select("#runBtn");
-    showBtn = d3.select("#showBtn");
-    visBtn = d3.select("#visBtn");
-    userTxt = d3.select("#user").on("change", function() {
-        stepsBar.firstStep();
-        showBtn.disable();
-        if (this.value) {
-            if (this.value != ghcs.login)
-                showBtn.enable();
-            else
-                stepsBar.secondStep();
-        }
-
-        (ghcs.params || (ghcs.params = {})).user = this.value;
-    });
-
-    [runBtn, showBtn, userTxt, visBtn].forEach(function(item) {
-        item.enable = function () {
-            item.attr("disabled", null);
-            return item;
-        };
-        item.disable = function () {
-            item.attr("disabled", "disabled");
-            return item;
-        };
-    });
-
     function startShow() {
-        visBtnRestart.hide();
-        visBtn.hide();
-        visBtnPause.show();
-        visBtnStop.show();
         cbDlvml.check();
         if (vis.showIsPaused())
-            vis.resumeShow();
+          vis.resumeShow();
         else
-            runShow();
+          runShow();
     }
-    visBtn.on('click', startShow);
-
-    runBtn.on("click", rewriteHash);
-    showBtn.on("click", rewriteHash);
-
-    ldrTop = d3.select("#ldrTop");
-    ldrTop.pntNode = d3.select(ldrTop.node().parentNode);
-    ldrTop.show = function () {
-        ldrTop.pntNode.style("display", null);
-        return ldrTop;
-    };
-    ldrTop.hide = function () {
-        ldrTop.pntNode.style("display", "none");
-        return ldrTop;
-    };
-
-    toolTip = d3.select("#tooltip");
-    toolTip.show = function () {
-        toolTip.style("display", "block");
-        return toolTip;
-    };
-    toolTip.hide = function () {
-        toolTip.style("display", null);
-        return toolTip;
-    };
 
     cbDlr = d3.select("#cb-dlr").datum("repo");
     cbDlsr = d3.select("#cb-dlsr").datum("stat");
@@ -697,17 +559,14 @@ function init() {
     [cbDlr, cbDlsr, cbDlvml].forEach(function(item) {
         item.check = function() {
             item.property("checked", true);
-            chCheckbox.apply(item.node());
         };
 
         item.uncheck = function() {
             item.property("checked", false);
-            chCheckbox.apply(item.node());
         };
 
         item.trigger = function() {
             item.property("checked", !item.property("checked"));
-            chCheckbox.apply(item.node());
         };
     });
 
